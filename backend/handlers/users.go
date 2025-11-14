@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+
+	"avenue/backend/persist"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -16,7 +19,7 @@ type LoginRequest struct {
 var validate = validator.New()
 
 const (
-	COOKIENAME  = "my-cookie"
+	COOKIENAME  = "user-id"
 	COOKIEVALUE = "test"
 )
 
@@ -35,7 +38,7 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
-	err := s.authorize(req.Username, req.Password)
+	u, err := s.authorize(req.Username, req.Password)
 	if err != nil {
 		// for now send the error in the response 🤔
 		c.AbortWithStatusJSON(http.StatusUnauthorized, Response{
@@ -44,25 +47,25 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(COOKIENAME, COOKIEVALUE, 3600, "/", "localhost", false, true)
+	c.SetCookie(COOKIENAME, fmt.Sprintf("%d", u.ID), 3600, "/", "localhost", false, true)
 	c.JSON(200, gin.H{"message": "OK"})
 }
 
-func (s *Server) authorize(username, password string) error {
+func (s *Server) authorize(username, password string) (persist.User, error) {
 	user, err := s.persist.GetUserByUsername(username)
 	if err != nil {
-		return err
+		return user, err
 	}
 
 	if user.Password != password {
-		return errors.New("Password incorrect")
+		return user, errors.New("Password incorrect")
 	}
 
-	return nil
+	return user, nil
 }
 
 func (s *Server) Logout(c *gin.Context) {
-	c.SetCookie(COOKIENAME, COOKIEVALUE, -1, "/", "localhost", false, true)
+	c.SetCookie(COOKIENAME, "", -1, "/", "localhost", false, true)
 	c.JSON(200, gin.H{"message": "OK"})
 }
 

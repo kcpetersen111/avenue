@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strconv"
@@ -60,22 +61,45 @@ func (s *Server) sessionCheck(c *gin.Context) {
 	if h := c.GetHeader(AUTHHEADER); h != "" {
 		if u := c.GetHeader(USERIDHEADER); u != "" {
 			if h == AUTHKEY && s.UserIDExists(u) {
+
+				rc := c.Request.Context()
+
+				// Add a new value to the context
+				newCtx := context.WithValue(rc, COOKIENAME, u)
+
+				// Update the request with the new context
+				c.Request = c.Request.WithContext(newCtx)
 				c.Next()
+				return
 			}
 		}
 	}
 
-	cookie, err := c.Cookie(COOKIENAME)
+	userId, err := c.Cookie(COOKIENAME)
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	if cookie == "" {
+	if userId == "" {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
+	if !s.UserIDExists(userId) {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	rc := c.Request.Context()
+
+	// Add a new value to the context
+	newCtx := context.WithValue(rc, COOKIENAME, userId)
+
+	// Update the request with the new context
+	c.Request = c.Request.WithContext(newCtx)
+
+	log.Printf("set new ctx: %s", c.Request.Context())
 	c.Next()
 }
 
@@ -109,6 +133,8 @@ func (s *Server) Run(address string) error {
 
 // pingHandler is a simple handler to check if the server is running.
 func (s *Server) pingHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	log.Printf("ctx val: %s", ctx.Value(COOKIENAME))
 	c.JSON(200, gin.H{
 		"message": "pong",
 	})
