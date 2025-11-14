@@ -1,6 +1,9 @@
 package shared
 
-import "os"
+import (
+	"net/mail"
+	"os"
+)
 
 func GetEnv(key string, defaultVal string) string {
 	envKey := os.Getenv(key)
@@ -10,4 +13,9 @@ func GetEnv(key string, defaultVal string) string {
 	}
 
 	return envKey
+}
+
+func IsValidEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
