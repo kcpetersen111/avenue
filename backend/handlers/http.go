@@ -9,6 +9,7 @@ import (
 	"avenue/backend/persist"
 	"avenue/backend/shared"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
 )
@@ -128,6 +129,8 @@ func (s *Server) SetupRoutes() {
 	securedRouterV1.GET("/user/profile", s.GetProfile)
 	securedRouterV1.PUT("/user/profile", s.UpdateProfile)
 	securedRouterV1.PATCH("/user/password", s.UpdatePassword)
+
+	s.router.Use(cors.Default())
 }
 
 func (s *Server) Run(address string) error {
