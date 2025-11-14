@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ type Response struct {
 func (s *Server) Upload(c *gin.Context) {
 	var req UploadReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, Response{
+		c.JSON(http.StatusBadRequest, Response{
 			Message: "could not marshal all data to json",
 			Error:   err.Error(),
 		})
@@ -37,7 +38,7 @@ func (s *Server) Upload(c *gin.Context) {
 	fileName := fmt.Sprintf("%s.%s", req.Name, req.Extension)
 	f, err := s.fs.Create(filePath + fileName)
 	if err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not create file",
 			Error:   err.Error(),
 		})
@@ -46,7 +47,7 @@ func (s *Server) Upload(c *gin.Context) {
 	defer f.Close()
 	_, err = f.Write([]byte(req.Data))
 	if err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not write to file",
 			Error:   err.Error(),
 		})
@@ -58,7 +59,7 @@ func (s *Server) Upload(c *gin.Context) {
 		Path:      filePath,
 	})
 	if err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not create file record",
 			Error:   err.Error(),
 		})
@@ -66,7 +67,7 @@ func (s *Server) Upload(c *gin.Context) {
 		s.fs.Remove(filePath + fileName)
 		return
 	}
-	c.JSON(200, Response{
+	c.JSON(http.StatusOK, Response{
 		Message: "file uploaded successfully",
 		Error:   "",
 	})
@@ -75,19 +76,19 @@ func (s *Server) Upload(c *gin.Context) {
 func (s *Server) ListFiles(c *gin.Context) {
 	files, err := s.persist.ListFiles()
 	if err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not list files",
 			Error:   err.Error(),
 		})
 		return
 	}
-	c.JSON(200, files)
+	c.JSON(http.StatusOK, files)
 }
 
 func (s *Server) GetFile(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("fileID"))
 	if err != nil {
-		c.JSON(400, Response{
+		c.JSON(http.StatusBadRequest, Response{
 			Message: "could not convert ascii to int",
 			Error:   err.Error(),
 		})
@@ -95,7 +96,7 @@ func (s *Server) GetFile(c *gin.Context) {
 	}
 	file, err := s.persist.GetFileByID(id)
 	if err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not get file",
 			Error:   err.Error(),
 		})
@@ -111,7 +112,7 @@ func (s *Server) GetFile(c *gin.Context) {
 	log.Printf("getting file: %v", filePath)
 	fileData, err := s.fs.Open(filePath)
 	if err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not read file",
 			Error:   err.Error(),
 		})
@@ -129,7 +130,7 @@ func (s *Server) GetFile(c *gin.Context) {
 		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			c.JSON(500, Response{
+			c.JSON(http.StatusInternalServerError, Response{
 				Message: "error reading bufio",
 				Error:   err.Error(),
 			})
@@ -137,13 +138,13 @@ func (s *Server) GetFile(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, file)
+	c.JSON(http.StatusOK, file)
 }
 
 func (s *Server) DeleteFile(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("fileID"))
 	if err != nil {
-		c.JSON(400, Response{
+		c.JSON(http.StatusBadRequest, Response{
 			Message: "could not convert ascii to int",
 			Error:   err.Error(),
 		})
@@ -151,14 +152,14 @@ func (s *Server) DeleteFile(c *gin.Context) {
 	}
 	f, err := s.persist.GetFileByID(id)
 	if err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "error getting file",
 			Error:   err.Error(),
 		})
 		return
 	}
 	if err = s.fs.Remove(fmt.Sprintf("%s%s.%s", f.Path, f.Name, f.Extension)); err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "error deleting file from file system",
 			Error:   err.Error(),
 		})
@@ -166,11 +167,11 @@ func (s *Server) DeleteFile(c *gin.Context) {
 	}
 
 	if err = s.persist.DeleteFile(id); err != nil {
-		c.JSON(500, Response{
+		c.JSON(http.StatusInternalServerError, Response{
 			Message: "error deleting file from db",
 			Error:   err.Error(),
 		})
 		return
 	}
-	c.JSON(200, "ok")
+	c.JSON(http.StatusOK, "ok")
 }
