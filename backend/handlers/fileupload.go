@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
@@ -85,21 +86,15 @@ func (s *Server) ListFiles(c *gin.Context) {
 	c.JSON(200, files)
 }
 
-type GetFileReq struct {
-	ID uint `json:"id" binding:"required"`
-}
-
 func (s *Server) GetFile(c *gin.Context) {
-
-	var req GetFileReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	id, err := strconv.Atoi(c.Param("fileID"))
+	if err != nil {
 		c.JSON(400, Response{
-			Message: "could not marshal all data to json",
+			Message: "could not convert ascii to int",
 			Error:   err.Error(),
 		})
-		return
 	}
-	file, err := s.persist.GetFileByID(req.ID)
+	file, err := s.persist.GetFileByID(id)
 	if err != nil {
 		c.JSON(500, Response{
 			Message: "could not get file",
@@ -123,6 +118,7 @@ func (s *Server) GetFile(c *gin.Context) {
 		})
 		return
 	}
+	defer fileData.Close()
 
 	f := bufio.NewReader(fileData)
 	b := make([]byte, 4096)
