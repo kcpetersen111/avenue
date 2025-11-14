@@ -8,10 +8,12 @@
   </template>
 
   <template v-else>
-    <div class="card flex flex-column align-center content-center gap-16">
-      <p>An unexpected error occured. Please check your connection and try again later.</p>
+    <div class="page">
+      <div class="card flex flex-col align-center gap-16">
+        <p>An unexpected error occured. Please check your connection and try again later.</p>
 
-      <AppButton>Try Again</AppButton>
+        <AppButton>Try Again</AppButton>
+      </div>
     </div>
   </template>
 </template>
