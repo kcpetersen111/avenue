@@ -14,6 +14,8 @@ func main() {
 		shared.GetEnv("DB_DATABASE", "avenue"),
 	)
 
+	_ = persist.UpsertRootUser()
+
 	server := handlers.SetupServer(persist)
 
 	server.SetupRoutes()

@@ -35,8 +35,9 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
-	err := authorize(req.Username, req.Password)
+	err := s.authorize(req.Username, req.Password)
 	if err != nil {
+		// for now send the error in the response 🤔
 		c.AbortWithStatusJSON(http.StatusUnauthorized, Response{
 			Error: err.Error(),
 		})
@@ -47,13 +48,14 @@ func (s *Server) Login(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "OK"})
 }
 
-func authorize(username, password string) error {
-	if username != "root" {
-		return errors.New("Invalid Username")
+func (s *Server) authorize(username, password string) error {
+	user, err := s.persist.GetUserByUsername(username)
+	if err != nil {
+		return err
 	}
 
-	if password != "password" {
-		return errors.New("Invalid Password")
+	if user.Password != password {
+		return errors.New("Password incorrect")
 	}
 
 	return nil

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"strconv"
 
 	"avenue/backend/persist"
 	"avenue/backend/shared"
@@ -35,16 +37,29 @@ var (
 	USERIDHEADER = shared.GetEnv("USER_HEADER", "user-id")
 )
 
-func UserIDExists(userID string) bool {
+func (s *Server) UserIDExists(userID string) bool {
 	// todo do a lookup in the db and see if the user exists
+	i, err := strconv.Atoi(userID)
+	if err != nil {
+		log.Print(err)
+		return false
+	}
+
+	u, err := s.persist.GetUserById(i)
+	if err != nil {
+		log.Print(err)
+		return false
+	}
+
+	log.Print(u)
 	return true
 }
 
-func sessionCheck(c *gin.Context) {
+func (s *Server) sessionCheck(c *gin.Context) {
 	// if the auth header is present with the needed fields, we can allow them to bypass the cookie check :)
 	if h := c.GetHeader(AUTHHEADER); h != "" {
 		if u := c.GetHeader(USERIDHEADER); u != "" {
-			if h == AUTHKEY && UserIDExists(u) {
+			if h == AUTHKEY && s.UserIDExists(u) {
 				c.Next()
 			}
 		}
@@ -72,7 +87,7 @@ func (s *Server) SetupRoutes() {
 	s.router.POST("/register", s.Register)
 
 	securedRouterV1 := s.router.Group("/v1")
-	securedRouterV1.Use(sessionCheck)
+	securedRouterV1.Use(s.sessionCheck)
 
 	securedRouterV1.POST("/upload", s.Upload)
 	securedRouterV1.GET("/file/list", s.ListFiles)
