@@ -67,10 +67,7 @@ func (s *Server) Upload(c *gin.Context) {
 		s.fs.Remove(filePath + fileName)
 		return
 	}
-	c.JSON(http.StatusOK, Response{
-		Message: "file uploaded successfully",
-		Error:   "",
-	})
+	c.Status(http.StatusCreated)
 }
 
 func (s *Server) ListFiles(c *gin.Context) {
@@ -173,5 +170,6 @@ func (s *Server) DeleteFile(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+
+	c.Status(http.StatusOK)
 }
