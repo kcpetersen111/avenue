@@ -25,10 +25,19 @@ func SetupServer(p *persist.Persist) Server {
 		persist: p,
 	}
 }
+
 func (s *Server) SetupRoutes() {
 	s.router.GET("/ping", s.pingHandler)
 	s.router.POST("/upload", s.Upload)
 	s.router.GET("/file/list", s.ListFiles)
+
+	// --- users routes --- //
+	s.router.POST("/login", s.Login)
+	s.router.POST("/logout", s.Logout)
+	s.router.POST("/register", s.Register)
+	s.router.GET("/user/profile", s.GetProfile)
+	s.router.PUT("/user/profile", s.UpdateProfile)
+	s.router.PATCH("/user/password", s.UpdatePassword)
 }
 
 func (s *Server) Run(address string) error {
