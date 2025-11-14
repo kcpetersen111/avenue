@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/afero"
 )
 
 type UploadReq struct {
@@ -33,11 +32,10 @@ func (s *Server) Upload(c *gin.Context) {
 		})
 		return
 	}
-	fs := afero.NewOsFs()
 
 	filePath := fmt.Sprintf("/")
 	fileName := fmt.Sprintf("%s.%s", req.Name, req.Extension)
-	f, err := fs.Create(filePath + fileName)
+	f, err := s.fs.Create(filePath + fileName)
 	if err != nil {
 		c.JSON(500, Response{
 			Message: "could not create file",
@@ -65,7 +63,7 @@ func (s *Server) Upload(c *gin.Context) {
 			Error:   err.Error(),
 		})
 		// we failed to create the file in the db may as well delete the file from the filesystem
-		fs.Remove(filePath + fileName)
+		s.fs.Remove(filePath + fileName)
 		return
 	}
 	c.JSON(200, Response{

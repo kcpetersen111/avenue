@@ -19,8 +19,9 @@ type Server struct {
 func SetupServer(p *persist.Persist) Server {
 	r := gin.Default()
 	fs := afero.NewOsFs()
+	jailedFs := afero.NewBasePathFs(fs, "./avenuectl/temp/")
 	return Server{
-		fs:      afero.NewBasePathFs(fs, "temp"),
+		fs:      jailedFs,
 		router:  r,
 		persist: p,
 	}
