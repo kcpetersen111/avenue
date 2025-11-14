@@ -6,13 +6,17 @@ import (
 )
 
 func main() {
-	dbHost, dbUser, dbPassword, dbName := "0.0.0.0", "user", "secret", "avenue"
-	persist := persist.NewPersist(dbHost, dbUser, dbPassword, dbName)
+	persist := persist.NewPersist(
+		getEnv("DB_HOST", "localhost"),
+		getEnv("DB_USER", "user"),
+		getEnv("DB_PASSWORD", "secret"),
+		getEnv("DB_DATABASE", "avenue"),
+	)
 
 	server := handlers.SetupServer(persist)
 
 	server.SetupRoutes()
 
 	// Start the server
-	server.Run(":8080")
+	_ = server.Run(":8080")
 }
