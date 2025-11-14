@@ -121,7 +121,7 @@ func (s *Server) SetupRoutes() {
 	securedRouterV1.POST("/file", s.Upload)
 	securedRouterV1.GET("/file/list", s.ListFiles)
 	securedRouterV1.GET("/file", s.GetFile)
-	s.router.DELETE("/file/:fileID", s.DeleteFile)
+	securedRouterV1.DELETE("/file/:fileID", s.DeleteFile)
 
 	// --- users routes --- //
 	securedRouterV1.POST("/logout", s.Logout)
