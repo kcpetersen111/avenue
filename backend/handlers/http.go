@@ -84,24 +84,23 @@ func (s *Server) SetupRoutes() {
 
 	unsecuredRouter.GET("/ping", s.pingHandler)
 	unsecuredRouter.POST("/login", s.Login)
-	s.router.POST("/register", s.Register)
+	unsecuredRouter.POST("/register", s.Register)
 
 	securedRouterV1 := s.router.Group("/v1")
 	securedRouterV1.Use(s.sessionCheck)
 
+	securedRouterV1.GET("/ping", s.pingHandler)
+
+	// -- file routes -- //
 	securedRouterV1.POST("/upload", s.Upload)
 	securedRouterV1.GET("/file/list", s.ListFiles)
-	securedRouterV1.GET("/ping", s.pingHandler)
+	securedRouterV1.GET("/file", s.GetFile)
 
 	// --- users routes --- //
 	securedRouterV1.POST("/logout", s.Logout)
 	securedRouterV1.GET("/user/profile", s.GetProfile)
 	securedRouterV1.PUT("/user/profile", s.UpdateProfile)
 	securedRouterV1.PATCH("/user/password", s.UpdatePassword)
-	s.router.GET("/ping", s.pingHandler)
-	// s.router.POST("/upload", s.Upload)
-	s.router.GET("/file/list", s.ListFiles)
-	s.router.GET("/file", s.GetFile)
 }
 
 func (s *Server) Run(address string) error {
