@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -83,15 +82,7 @@ func (s *Server) ListFiles(c *gin.Context) {
 }
 
 func (s *Server) GetFile(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("fileID"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, Response{
-			Message: "could not convert ascii to int",
-			Error:   err.Error(),
-		})
-		return
-	}
-	file, err := s.persist.GetFileByID(id)
+	file, err := s.persist.GetFileByID(c.Param("fileID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not get file",
@@ -139,15 +130,7 @@ func (s *Server) GetFile(c *gin.Context) {
 }
 
 func (s *Server) DeleteFile(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("fileID"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, Response{
-			Message: "could not convert ascii to int",
-			Error:   err.Error(),
-		})
-		return
-	}
-	f, err := s.persist.GetFileByID(id)
+	f, err := s.persist.GetFileByID(c.Param("fileID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Message: "error getting file",
@@ -163,7 +146,7 @@ func (s *Server) DeleteFile(c *gin.Context) {
 		return
 	}
 
-	if err = s.persist.DeleteFile(id); err != nil {
+	if err = s.persist.DeleteFile(c.Param("fileID")); err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Message: "error deleting file from db",
 			Error:   err.Error(),

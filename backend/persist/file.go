@@ -1,22 +1,31 @@
 package persist
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type File struct {
-	ID        int    `gorm:"primaryKey"`
-	Name      string `gorm:"not null"`
-	Extension string `gorm:"not null"`
-	Path      string `gorm:"not null"`
-	CreatedAt time.Time
+	ID         string `gorm:"primaryKey, type:uuid"`
+	Name       string `gorm:"not null"`
+	Extension  string `gorm:"not null"`
+	Path       string `gorm:"not null"`
+	FileSize   int64  `gorm:"column:file_size"`
+	CreatedAt  time.Time
+	DeleteTime time.Time
 }
 
 // CreateFile creates a new file record in the database.
 func (p *Persist) CreateFile(file *File) error {
+	if file.ID == "" {
+		file.ID = uuid.NewString()
+	}
 	return p.db.Create(file).Error
 }
 
 // GetFileByID retrieves a file by its ID.
-func (p *Persist) GetFileByID(id int) (*File, error) {
+func (p *Persist) GetFileByID(id string) (*File, error) {
 	var file File
 	err := p.db.First(&file, id).Error
 	if err != nil {
@@ -33,6 +42,6 @@ func (p *Persist) ListFiles() ([]File, error) {
 }
 
 // DeleteFile deletes a file by its ID.
-func (p *Persist) DeleteFile(id int) error {
+func (p *Persist) DeleteFile(id string) error {
 	return p.db.Delete(&File{}, id).Error
 }
