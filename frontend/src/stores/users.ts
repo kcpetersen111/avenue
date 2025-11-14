@@ -33,7 +33,7 @@ export const useUsersStore = defineStore('users', () => {
     async function pullUser(id: number) {
         userData.value.loading = true;
         // TODO: Update url based on API endpoint
-        const response = await api({ url: '' })
+        const response = await api({ url: `users/${id}/` })
         userData.value.loading = false;
 
         if (response.ok) {
