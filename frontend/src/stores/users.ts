@@ -70,7 +70,7 @@ export const useUsersStore = defineStore('users', () => {
         });
 
     return response;
-}
+    }
 
     async function pullMe() {
         userData.value.loading = true;
