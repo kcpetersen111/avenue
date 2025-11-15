@@ -57,6 +57,7 @@ router.beforeEach(async (to, from, next) => {
         to.matched.some((record) => record.meta.allowAnonymous) ||
         store.loggedIn
     ) {
+        console.log('here 1')
         if (from.path) {
             scrollPositions[from.path] = document.documentElement.scrollTop;
         }

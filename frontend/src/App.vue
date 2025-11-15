@@ -47,6 +47,7 @@ async function getUserAndLogin() {
 
     if (response.ok) {
       status.value = "loaded";
+      usersStore.logIn(response.body);
     } else {
       status.value = "error";
     }
@@ -54,6 +55,8 @@ async function getUserAndLogin() {
     // no user token, nothing to load.
     status.value = "loaded";
   }
+
+  document.documentElement.classList.remove("app-not-launched");
 }
 </script>
 
