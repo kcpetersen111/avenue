@@ -17,17 +17,17 @@ type File struct {
 }
 
 // CreateFile creates a new file record in the database.
-func (p *Persist) CreateFile(file *File) error {
+func (p *Persist) CreateFile(file *File) (string, error) {
 	if file.ID == "" {
 		file.ID = uuid.NewString()
 	}
-	return p.db.Create(file).Error
+	return file.ID, p.db.Create(file).Error
 }
 
 // GetFileByID retrieves a file by its ID.
 func (p *Persist) GetFileByID(id string) (*File, error) {
 	var file File
-	err := p.db.First(&file, id).Error
+	err := p.db.Where("id = ?", id).First(&file).Error
 	if err != nil {
 		return nil, err
 	}
@@ -43,5 +43,5 @@ func (p *Persist) ListFiles() ([]File, error) {
 
 // DeleteFile deletes a file by its ID.
 func (p *Persist) DeleteFile(id string) error {
-	return p.db.Delete(&File{}, id).Error
+	return p.db.Where("id = ?", id).Delete(&File{}).Error
 }
