@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	SESSIONCOOKIENAME = "session-id"
-	USERCOOKIENAME    = "user-id"
+	SESSIONCOOKIENAME = "session_id"
+	USERCOOKIENAME    = "user_id"
 	USERCOOKIEVALUE   = "test"
 )
 
