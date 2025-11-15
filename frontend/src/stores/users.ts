@@ -34,7 +34,7 @@ export const useUsersStore = defineStore('users', () => {
         loggedIn.value = true;
     }
 
-    async function logInAPI(userData: { username: string; password: string }) {
+    async function logInAPI(userData: { email: string; password: string }) {
         const response = await api({
             url: "login",
             method: "POST",
@@ -51,8 +51,25 @@ export const useUsersStore = defineStore('users', () => {
         setToken(null);
     }
 
-    async function signUp() {
-        // TODO: Implement sign-up logic
+    async function signUp(userData: {email: string; password:string }) {
+        const response = await signUpAPI(userData);
+
+        if (response.ok || response.status === 201) {
+            setToken(response.body.session_id);
+            await logIn(response.body.user_data);
+        }
+
+    return response;
+    }
+
+    async function signUpAPI(userData: { email: string; password: string }) {
+        const response = await api({
+            url: "register",
+            method: "POST",
+            json: userData,
+        });
+
+    return response;
     }
 
     async function pullMe() {
@@ -93,6 +110,7 @@ export const useUsersStore = defineStore('users', () => {
         logIn,
         logInAPI,
         logOut,
+        signUpAPI,
         signUp,
         pullMe,
         updateUser,
