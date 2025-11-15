@@ -45,8 +45,6 @@ async function handleLogin() {
   const response = await usersStore.logInAPI({ email: email.value, password: password.value });
   submitting.value = false;
 
-  console.log(response)
-
   if (response.status === 200) {
     usersStore.setToken(response.body.session_id);
     usersStore.logIn(response.body.user_data);
