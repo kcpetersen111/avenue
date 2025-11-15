@@ -1,16 +1,39 @@
 package persist
 
-import "log"
+import (
+	"errors"
+	"log"
+	"strconv"
+	"time"
+
+	"avenue/backend/shared"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
-	ID       int    `gorm:"primaryKey"`
-	Username string `gorm:"not null"`
-	Email    string `gorm:"not null"`
-	Password string `gorm:"not null"`
-	CanLogin bool   `gorm:"not null"`
+	ID        uint           `gorm:"primarykey" json:"id"`
+	Username  string         `gorm:"not null;uniqueIndex" json:"username"`
+	Email     string         `gorm:"not null;uniqueIndex" json:"email"`
+	Password  string         `gorm:"not null" json:"-"`
+	CanLogin  bool           `gorm:"not null" json:"canLogin"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt"`
 }
 
 // CreateFile creates a new file record in the database.
+func (p *Persist) GetUserByIdStr(idStr string) (User, error) {
+	var u User
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return u, err
+	}
+
+	return p.GetUserById(id)
+}
+
 func (p *Persist) GetUserById(id int) (User, error) {
 	var u User
 
@@ -21,13 +44,22 @@ func (p *Persist) GetUserById(id int) (User, error) {
 	return u, nil
 }
 
+func (p *Persist) UpdateUser(user User) (User, error) {
+	res := p.db.Model(&User{}).Where("id = ?", user.ID).Updates(user)
+
+	return user, res.Error
+}
+
 func (p *Persist) UpsertRootUser() error {
 	user := User{
-		ID:       1,
-		Username: "root",
-		Email:    "root@gmail.com",
-		Password: "password",
-		CanLogin: true,
+		ID:        1,
+		Username:  shared.GetEnv("ROOT_USERNAME", "root"),
+		Email:     shared.GetEnv("ROOT_USER_EMAIL", "root@gmail.com"),
+		Password:  shared.GetEnv("ROOT_USER_PASSWORD", "password"),
+		CanLogin:  true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		DeletedAt: gorm.DeletedAt{},
 	}
 
 	res := p.db.Save(&user)
@@ -36,7 +68,7 @@ func (p *Persist) UpsertRootUser() error {
 
 func (p *Persist) GetUserByUsername(username string) (User, error) {
 	var u User
-	res := p.db.First(&u).Where("username = ?", username)
+	res := p.db.First(&u, "username = ?", username)
 
 	if res.Error != nil {
 		return u, res.Error
@@ -47,7 +79,7 @@ func (p *Persist) GetUserByUsername(username string) (User, error) {
 
 func (p *Persist) GetUserByEmail(email string) (User, error) {
 	var u User
-	res := p.db.First(&u).Where("email = ?", email)
+	res := p.db.First(&u, "email = ?", email)
 
 	if res.Error != nil {
 		return u, res.Error
@@ -56,36 +88,46 @@ func (p *Persist) GetUserByEmail(email string) (User, error) {
 	return u, nil
 }
 
-func (p *Persist) CreateUser(user *User) error {
-	return p.db.Create(user).Error
+func (p *Persist) CreateUser(username, email, password string) (User, error) {
+	u := User{
+		Username:  username,
+		Email:     email,
+		Password:  password,
+		CanLogin:  true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	res := p.db.Create(&u)
+
+	return u, res.Error
 }
 
 func (p *Persist) IsUniqueEmail(email string) bool {
 	u, err := p.GetUserByEmail(email)
 	if err != nil {
-		log.Print(err)
-		return false
+		return errors.Is(err, gorm.ErrRecordNotFound)
 	}
 
+	log.Printf("unique email user: %+v", u)
 	// 0 would mean it is the default value, so nothing was found?
 	if u.ID == 0 {
-		return false
+		return true
 	}
 
-	return true
+	return false
 }
 
 func (p *Persist) IsUniqueUsername(username string) bool {
 	u, err := p.GetUserByUsername(username)
 	if err != nil {
-		log.Print(err)
-		return false
+		return errors.Is(err, gorm.ErrRecordNotFound)
 	}
 
 	// 0 would mean it is the default value, so nothing was found?
 	if u.ID == 0 {
-		return false
+		return true
 	}
 
-	return true
+	return false
 }

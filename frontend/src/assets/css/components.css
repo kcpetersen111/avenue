@@ -4,6 +4,9 @@ input[type="text"], input[type="number"], input[type="email"], input[type="passw
     width: 100%;
     background-color: var(--gray-4);
     color: var(--text);
+    border: none !important;
+    border-radius: 6px;
+    padding: 8px;
 
     font-family: "Inter";
     font-size: 16px;
@@ -18,10 +21,13 @@ button {
     background-color: transparent;
     border: none;
 }
+button:hover {
+    cursor: pointer;
+}
 
 /* Custom */
 .card {
-  padding: 16px;
+  padding: 24px;
   width: 100%;
   background-color: var(--gray-2);
 }
