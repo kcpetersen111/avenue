@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
@@ -38,19 +40,42 @@ func (s *Server) Upload(c *gin.Context) {
 		})
 		return
 	}
-	var req UploadReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, Response{
-			Message: "could not marshal all data to json",
+
+	// Get uploaded file from multipart form
+	file, err := c.FormFile("file")
+	if err != nil {
+		log.Printf("error gettting file from form: %v", err)
+		c.JSON(http.StatusTeapot, Response{
+			Message: "could not get file from form",
 			Error:   err.Error(),
 		})
 		return
 	}
+
+	// Get parent folder ID from form (optional)
+	parent := c.PostForm("parent")
+
+	// Extract filename and extension
+	filename := file.Filename
+	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(filename), "."))
+
+	// Open uploaded file
+	src, err := file.Open()
+	if err != nil {
+		log.Printf("it was the other one: %v", err)
+		c.JSON(http.StatusBadRequest, Response{
+			Message: "could not open uploaded file",
+			Error:   err.Error(),
+		})
+		return
+	}
+	defer src.Close()
+
+	// Create file record in database
 	fileId, err := s.persist.CreateFile(&persist.File{
-		Name:      req.Name,
-		Extension: req.Extension,
-		Parent:    req.Parent,
-		// Path:      filePath,
+		Name:      filename,
+		Extension: ext,
+		Parent:    parent,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
@@ -59,10 +84,12 @@ func (s *Server) Upload(c *gin.Context) {
 		})
 		return
 	}
-	exists, err := afero.DirExists(s.fs, fmt.Sprint("/%s", userId))
+
+	// Ensure user directory exists
+	exists, err := afero.DirExists(s.fs, fmt.Sprintf("/%s", userId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
-			Message: "error ",
+			Message: "error checking user directory",
 			Error:   err.Error(),
 		})
 		return
@@ -78,8 +105,9 @@ func (s *Server) Upload(c *gin.Context) {
 		}
 	}
 
-	filepath := fmt.Sprintf("/%s/%s", userId, fileId)
-	f, err := s.fs.Create(filepath)
+	// Create destination file
+	dstPath := fmt.Sprintf("/%s/%s", userId, fileId)
+	dst, err := s.fs.Create(dstPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not create file",
@@ -87,8 +115,10 @@ func (s *Server) Upload(c *gin.Context) {
 		})
 		return
 	}
-	defer f.Close()
-	size, err := f.Write([]byte(req.Data))
+	defer dst.Close()
+
+	// Copy file data
+	size, err := io.Copy(dst, src)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Message: "could not write to file",
@@ -97,9 +127,10 @@ func (s *Server) Upload(c *gin.Context) {
 		return
 	}
 
+	// Update file size in database
 	err = s.persist.UpdateFile(persist.File{
 		ID:       fileId,
-		FileSize: size,
+		FileSize: int(size),
 	}, []string{"file_size"})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{

@@ -1,6 +1,7 @@
 <template>
   <div class="page gap-5">
     <h1>Drive</h1>
+    <FileUploader :parent="currentFolderId" @upload="handleFileUpload" @error="handleUploadError" />
 
     <div v-if="loading" class="flex flex-col align-center content-center gap-3">
       <SpinnerView />
@@ -47,6 +48,9 @@
   </div>
 </template>
 
+
+
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -54,12 +58,14 @@ import api from '@/utils/api';
 import type { Folder, File, FolderContents } from '@/types/folder';
 import SpinnerView from './components/SpinnerView.vue';
 import ErrorMessage from './components/ErrorMessage.vue';
+import FileUploader from '@/components/FileUploader.vue';
 
 const route = useRoute();
 const loading = ref(false);
 const error = ref<string | undefined>();
 const folders = ref<Folder[]>([]);
 const files = ref<File[]>([]);
+const currentFolderId = ref<string>('');
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -96,9 +102,19 @@ async function loadFolderContents(folderId: string = '') {
   }
 }
 
+function handleFileUpload(files: File[]) {
+  // Reload folder contents after successful upload
+  loadFolderContents(currentFolderId.value);
+}
+
+function handleUploadError(message: string) {
+  error.value = message;
+}
+
 onMounted(() => {
   // Get folderId from route params or query, default to empty string for root
   const folderId = (route.params.folderId as string) || (route.query.folderId as string) || '';
+  currentFolderId.value = folderId;
   loadFolderContents(folderId);
 });
 </script>
