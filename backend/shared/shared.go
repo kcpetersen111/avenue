@@ -3,7 +3,6 @@ package shared
 import (
 	"context"
 	"errors"
-	"net/mail"
 	"os"
 )
 
@@ -21,11 +20,6 @@ func GetEnv(key string, defaultVal string) string {
 	}
 
 	return envKey
-}
-
-func IsValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
 }
 
 func GetUserIdFromContext(ctx context.Context) (string, error) {

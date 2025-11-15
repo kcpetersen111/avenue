@@ -112,7 +112,6 @@ func (s *Server) Logout(c *gin.Context) {
 type RegisterRequest struct {
 	Username string `json:"username" validate:"required,min=4,max=64"`
 	Password string `json:"password" validate:"required,min=4,max=64"`
-	Email    string `json:"email" validate:"required,min=4,max=512"`
 }
 
 func (s *Server) Register(c *gin.Context) {
@@ -132,13 +131,6 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	if !shared.IsValidEmail(req.Email) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, Response{
-			Error: "Email is not valid",
-		})
-		return
-	}
-
 	if !s.persist.IsUniqueUsername(req.Username) {
 		c.AbortWithStatusJSON(http.StatusConflict, Response{
 			Error: "Username already exists",
@@ -146,14 +138,7 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	if !s.persist.IsUniqueEmail(req.Email) {
-		c.AbortWithStatusJSON(http.StatusConflict, Response{
-			Error: "Email already exists",
-		})
-		return
-	}
-
-	u, err := s.persist.CreateUser(req.Username, req.Email, req.Password)
+	u, err := s.persist.CreateUser(req.Username, req.Password)
 	if err != nil {
 		log.Print(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, Response{
@@ -188,7 +173,6 @@ func (s *Server) GetProfile(c *gin.Context) {
 
 type UpdateProfileRequest struct {
 	Username string `json:"username" validate:"omitempty,min=8,max=128"`
-	Email    string `json:"email" validate:"omitempty,email"`
 }
 
 func (s *Server) UpdateProfile(c *gin.Context) {
@@ -225,17 +209,6 @@ func (s *Server) UpdateProfile(c *gin.Context) {
 			Error: err.Error(),
 		})
 		return
-	}
-
-	if req.Email != "" && req.Email != u.Email {
-		if !s.persist.IsUniqueEmail(req.Email) {
-			c.AbortWithStatusJSON(http.StatusConflict, Response{
-				Error: "Email already exists",
-			})
-			return
-		}
-
-		u.Email = req.Email
 	}
 
 	if req.Username != "" && req.Username != u.Username {
