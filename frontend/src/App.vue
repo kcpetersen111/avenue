@@ -49,10 +49,17 @@ async function getUserAndLogin() {
   if (usersStore.token) {
     const response = await usersStore.pullMe();
 
-    status.value = response.ok ? "loaded" : "error";
+    if (response.ok) {
+      status.value = "loaded";
+      usersStore.logIn(response.body);
+    } else {
+      status.value = "error";
+    }
   } else {
     status.value = "loaded";
   }
+
+  document.documentElement.classList.remove("app-not-launched");
 }
 </script>
 

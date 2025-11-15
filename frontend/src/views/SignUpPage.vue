@@ -82,8 +82,6 @@ async function handleSignUp() {
 
   submitting.value = false;
 
-  console.log(response);
-
   if (response.status === 201 || response.status === 200) {
     // usersStore.setToken(response.body.session_id);
     // usersStore.logIn(response.body.user_data);
