@@ -1,6 +1,7 @@
 <template>
   <div class="page gap-5">
     <h1>Drive</h1>
+    <FileUploader />
 
     <div v-if="loading" class="flex flex-col align-center content-center gap-3">
       <SpinnerView />
@@ -47,6 +48,9 @@
   </div>
 </template>
 
+
+
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -54,6 +58,7 @@ import api from '@/utils/api';
 import type { Folder, File, FolderContents } from '@/types/folder';
 import SpinnerView from './components/SpinnerView.vue';
 import ErrorMessage from './components/ErrorMessage.vue';
+import FileUploader from '@/components/FileUploader.vue';
 
 const route = useRoute();
 const loading = ref(false);
