@@ -63,11 +63,11 @@ export const useUsersStore = defineStore('users', () => {
     }
 
     async function signUpAPI(userData: { username: string; password: string }) {
-    const response = await api({
-        url: "signup",
-        method: "POST",
-        json: userData,
-    });
+        const response = await api({
+            url: "signup",
+            method: "POST",
+            json: userData,
+        });
 
     return response;
 }
