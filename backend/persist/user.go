@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO set up indexes on the username and email fields
 type User struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	Username  string         `gorm:"not null;uniqueIndex" json:"username"`

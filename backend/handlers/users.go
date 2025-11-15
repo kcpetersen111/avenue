@@ -125,7 +125,24 @@ func (s *Server) Register(c *gin.Context) {
 }
 
 func (s *Server) GetProfile(c *gin.Context) {
-	c.JSON(http.StatusOK, Response{Message: "OK"})
+	ctx := c.Request.Context()
+	userId, err := shared.GetUserIdFromContext(ctx)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, Response{
+			Error: "User Id not found",
+		})
+		return
+	}
+
+	u, err := s.persist.GetUserByIdStr(userId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, Response{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, u)
 }
 
 type UpdateProfileRequest struct {
