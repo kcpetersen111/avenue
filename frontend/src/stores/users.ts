@@ -51,9 +51,27 @@ export const useUsersStore = defineStore('users', () => {
         setToken(null);
     }
 
-    async function signUp() {
+    async function signUp(userData: {username: string; password:string }) {
+        const response = await signUpAPI(userData);
+
+        if (response.ok || response.status === 201) {
+            setToken(response.body.session_id);
+            await logIn(response.body.user_data);
+    }
+
+    return response;
         // TODO: Implement sign-up logic
     }
+
+    async function signUpAPI(userData: { username: string; password: string }) {
+    const response = await api({
+        url: "signup",
+        method: "POST",
+        json: userData,
+    });
+
+    return response;
+}
 
     async function pullMe() {
         userData.value.loading = true;
@@ -93,6 +111,7 @@ export const useUsersStore = defineStore('users', () => {
         logIn,
         logInAPI,
         logOut,
+        signUpAPI,
         signUp,
         pullMe,
         updateUser,
