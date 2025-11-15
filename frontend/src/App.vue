@@ -28,11 +28,15 @@ import { onMounted, ref } from 'vue';
 import AppButton from './views/components/AppButton.vue';
 import SpinnerView from './views/components/SpinnerView.vue';
 import { useUsersStore } from './stores/users';
+import { setGlobalRequestHeader } from './utils/api';
 
 const usersStore = useUsersStore();
 const status = ref<"loading" | "loaded" | "error">("loading");
 
 onMounted(() => {
+  if (usersStore.token !== null) {
+    setGlobalRequestHeader("Authorization", `Token ${usersStore.token}`);
+  }
   getUserAndLogin();
 })
 
