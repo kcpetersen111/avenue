@@ -132,6 +132,19 @@ func (s *Server) sessionCheck(c *gin.Context) {
 }
 
 func (s *Server) SetupRoutes() {
+	c := cors.Config{
+		AllowOrigins:     []string{shared.GetEnv("ALLOW_ORIGIN", "http://localhost:5173"), "http://localhost:8080"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "content-type", "Accept"},
+		AllowCredentials: false,
+		ExposeHeaders:    []string{"Content-Length"},
+		MaxAge:           12 * time.Hour,
+	}
+
+	log.Printf("cors: %+v", c)
+
+	s.router.Use(cors.New(c))
+
 	unsecuredRouter := s.router.Group("")
 
 	unsecuredRouter.GET("/ping", s.pingHandler)
@@ -154,15 +167,6 @@ func (s *Server) SetupRoutes() {
 	securedRouterV1.GET("/user/profile", s.GetProfile)
 	securedRouterV1.PUT("/user/profile", s.UpdateProfile)
 	securedRouterV1.PATCH("/user/password", s.UpdatePassword)
-
-	s.router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{shared.GetEnv("ALLOW_ORIGIN", "http://localhost:8080"), "*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
-		AllowCredentials: true,
-		ExposeHeaders:    []string{"Content-Length"},
-		MaxAge:           12 * time.Hour,
-	}))
 }
 
 func (s *Server) Run(address string) error {
