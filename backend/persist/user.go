@@ -16,7 +16,7 @@ type User struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	Username  string         `gorm:"not null;uniqueIndex" json:"username"`
 	Email     string         `gorm:"not null;uniqueIndex" json:"email"`
-	Password  string         `gorm:"not null"`
+	Password  string         `gorm:"not null" json:"-"`
 	CanLogin  bool           `gorm:"not null" json:"canLogin"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
