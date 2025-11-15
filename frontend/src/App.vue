@@ -1,10 +1,16 @@
 <template>
   <template v-if="status === 'loaded'">
     <div class="content flex flex-col gap-6">
-      <div class="header flex flex-row justify-end">
 
+      <!-- TOP PURPLE HEADER BAR -->
+      <div class="header flex flex-row items-center px-4">
+        <div class="branding flex flex-row items-center gap-3">
+          <img src="/avenue-logo.png" alt="Logo" class="logo" />
+          <span class="avenue-text">AVENUE</span>
+        </div>
       </div>
-      <RouterView></RouterView>
+
+      <RouterView />
     </div>
   </template>
 
@@ -16,7 +22,6 @@
     <div class="page">
       <div class="card flex flex-col align-center gap-6">
         <p>An unexpected error occured. Please check your connection and try again later.</p>
-
         <AppButton>Try Again</AppButton>
       </div>
     </div>
@@ -42,30 +47,47 @@ onMounted(() => {
 
 async function getUserAndLogin() {
   if (usersStore.token) {
-    // has a user token from previous login. Load user data
     const response = await usersStore.pullMe();
 
-    if (response.ok) {
-      status.value = "loaded";
-    } else {
-      status.value = "error";
-    }
+    status.value = response.ok ? "loaded" : "error";
   } else {
-    // no user token, nothing to load.
     status.value = "loaded";
   }
 }
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap');
+
 .header {
   width: 100%;
-  height: 69px;
-  padding-left: -12px;
+  height: 90px;
   background-color: var(--primary);
+  display: flex;
+  align-items: center;
 }
+
+.logo {
+  height: 75px;
+  width: auto;
+}
+
+.avenue-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+}
+
 .content {
   width: 100%;
   align-items: center;
+}
+
+.avenue-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
 }
 </style>
