@@ -115,19 +115,22 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import api from '@/utils/api'
 
 interface Props {
   accept?: string
   maxSize?: number // in MB
   multiple?: boolean
   disabled?: boolean
+  parent?: string // folder ID for parent folder
 }
 
 const props = withDefaults(defineProps<Props>(), {
   accept: '*',
   maxSize: 10,
   multiple: false,
-  disabled: false
+  disabled: false,
+  parent: ''
 })
 
 const emit = defineEmits<{
@@ -220,40 +223,50 @@ const uploadFiles = async () => {
   uploadProgress.value = 0
   
   try {
-    const formData = new FormData()
-    selectedFiles.value.forEach((file) => {
-      formData.append('files', file)
-    })
+    // Upload files one by one
+    const totalFiles = selectedFiles.value.length
+    let uploadedCount = 0
     
-    const xhr = new XMLHttpRequest()
-    
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable) {
-        uploadProgress.value = Math.round((e.loaded / e.total) * 100)
+    for (const file of selectedFiles.value) {
+      try {
+        // Create FormData for file upload
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        // Add parent folder ID if provided
+        if (props.parent) {
+          formData.append('parent', props.parent)
+        }
+        
+        // Make API call with FormData
+        const response = await api({
+          url: 'v1/file',
+          method: 'POST',
+          body: formData
+          // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
+        })
+        
+        if (!response.ok) {
+          const errorMessage = response.body?.error || response.body?.message || 'Upload failed'
+          emit('error', `Failed to upload "${file.name}": ${errorMessage}`)
+          isUploading.value = false
+          return
+        }
+        
+        uploadedCount++
+        uploadProgress.value = Math.round((uploadedCount / totalFiles) * 100)
+      } catch (fileError) {
+        emit('error', `Failed to upload "${file.name}": ${fileError instanceof Error ? fileError.message : 'Unknown error'}`)
+        isUploading.value = false
+        return
       }
-    })
+    }
     
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-        emit('upload', selectedFiles.value)
-        selectedFiles.value = []
-        uploadProgress.value = 0
-      } else {
-        emit('error', `Upload failed: ${xhr.statusText}`)
-      }
-      isUploading.value = false
-    })
-    
-    xhr.addEventListener('error', () => {
-      emit('error', 'Upload failed due to network error')
-      isUploading.value = false
-    })
-    
-    const token = localStorage.getItem('authToken') // Adjust based on your auth implementation
-    xhr.open('POST', '/v1/file')
-    xhr.setRequestHeader('Authorization', `Token ${token}`)
-    xhr.send(formData)
-    
+    // All files uploaded successfully
+    emit('upload', selectedFiles.value)
+    selectedFiles.value = []
+    uploadProgress.value = 0
+    isUploading.value = false
   } catch (error) {
     emit('error', error instanceof Error ? error.message : 'Upload failed')
     isUploading.value = false

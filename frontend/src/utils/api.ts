@@ -183,6 +183,11 @@ export default async function api(
     init.headers["Content-Type"] = "application/json";
   }
 
+  // Don't set Content-Type for FormData - browser will set it with boundary
+  if (body instanceof FormData && init.headers["Content-Type"]) {
+    delete init.headers["Content-Type"];
+  }
+
   if (body !== null) {
     init.body = body;
   } else if (json !== null) {
