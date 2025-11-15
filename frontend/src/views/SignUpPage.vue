@@ -42,7 +42,7 @@
 
       <ErrorMessage v-if="error">{{ error }}</ErrorMessage>
 
-      <AppButton type="submit">LOGIN</AppButton>
+      <AppButton type="submit">SIGN UP</AppButton>
     </form>
 
     <p>Already have an account? <RouterLink :to="{ name: 'login' }" class="text-link">Login</RouterLink> instead.</p>
