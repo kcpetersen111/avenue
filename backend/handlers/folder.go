@@ -1,16 +1,10 @@
 package handlers
 
 import (
-<<<<<<< HEAD
 	"avenue/backend/persist"
 	"avenue/backend/shared"
-=======
->>>>>>> origin/main
 	"net/http"
 	"strconv"
-
-	"avenue/backend/persist"
-	"avenue/backend/shared"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/sjson"
